@@ -3,8 +3,11 @@
 namespace App\Services\Account;
 
 use App\Enums\TransferConfig;
+use App\Exceptions\NoSufficientMoneyException;
 use App\Models\AccountCard;
 use App\Repositories\TransferRepo;
+use Illuminate\Database\QueryException;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -22,8 +25,8 @@ class TransferService
     /**
      * Create a new TransferService instance.
      *
-     * @param int $sourceCardNumber The source card number.
-     * @param int $destCardNumber The destination card number.
+     * @param int $sourceCard
+     * @param int $destCard
      * @param int $amount The amount to be transferred.
      */
     public function __construct(int $sourceCard, int $destCard, int $amount)
@@ -57,18 +60,21 @@ class TransferService
      * Perform the transfer transaction.
      *
      * @return bool True if the transfer was successful, false otherwise.
+     * @throws NoSufficientMoneyException
      */
     public function transfer(): bool
     {
+        if (! $this->hasSufficientMoney()) {
+            throw new NoSufficientMoneyException(__('transfer.not-sufficient-money'), Response::HTTP_BAD_REQUEST);
+        }
+
         DB::beginTransaction();
 
         try{
-            $this->doTransfer();
-
+            $this->performTransfer();
             DB::commit();
             return true;
-        }catch (\Exception $e) {
-            dd($e->getMessage());
+        }catch (\Exception|QueryException $e) {
             DB::rollBack();
             return false;
         }
@@ -76,16 +82,9 @@ class TransferService
 
     /**
      * Perform the actual transfer logic.
-     *
-     * @throws ValidationException
      */
-    private function doTransfer(): void
+    private function performTransfer(): void
     {
-        if (! $this->hasSufficientMoney()) {
-            throw ValidationException::withMessages([
-                'message' => __('transfer.not-sufficient-money')
-            ]);
-        }
 
         TransferRepo::doTransferAmount(
             source:         $this->sourceCard,

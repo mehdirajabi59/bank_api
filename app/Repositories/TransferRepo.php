@@ -20,11 +20,9 @@ class TransferRepo
     {
         $card = AccountCard::query()
                 ->select('id', 'account_id')
-                ->with('account:balance,id')
+                ->with(['account'=> fn($q) => $q->select('balance', 'id')->lockForUpdate()])
                 ->where('card_number', $cardNumber)
                 ->first();
-
-        $card->account()->lockForUpdate();
 
         return $card->account->balance;
 
