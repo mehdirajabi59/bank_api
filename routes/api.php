@@ -7,5 +7,6 @@ Route::post('/transfer-money', [\App\Http\Controllers\Account\TransferController
     ->name('transfer-money')
     ->middleware( 'CorrectNumber:source_card_number,dest_card_number,amount');
 
-Route::get('recently-transactions', [\App\Http\Controllers\Account\RecentTransactionController::class, '__invoke']);
+Route::get('recently-transactions', [\App\Http\Controllers\Account\RecentTransactionController::class, '__invoke'])
+->name('recently-transactions');
 
