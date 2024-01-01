@@ -29,10 +29,10 @@ class TransferService
      * @param int $destCard
      * @param int $amount The amount to be transferred.
      */
-    public function __construct(int $sourceCard, int $destCard, int $amount)
+    public function __construct(int $sourceCard, int $destCard, int $amount, private TransferRepo $transferRepo)
     {
-        $this->sourceCard   = TransferRepo::getCard($sourceCard);
-        $this->destCard     = TransferRepo::getCard($destCard);
+        $this->sourceCard   = $transferRepo::getCard($sourceCard);
+        $this->destCard     = $transferRepo::getCard($destCard);
         $this->amount = $amount;
     }
 
@@ -86,7 +86,7 @@ class TransferService
     private function performTransfer(): void
     {
 
-        TransferRepo::doTransferAmount(
+        $this->transferRepo::doTransferAmount(
             source:         $this->sourceCard,
             dest:           $this->destCard,
             destAmount:     $this->getDestAmount(),
@@ -101,7 +101,7 @@ class TransferService
      */
     public function hasSufficientMoney(): bool
     {
-        return TransferRepo::getBalance($this->sourceCard->card_number) >= $this->getSourceAmount();
+        return $this->transferRepo::getBalance($this->sourceCard->card_number) >= $this->getSourceAmount();
     }
 
 }

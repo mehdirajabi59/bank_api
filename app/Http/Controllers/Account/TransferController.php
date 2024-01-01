@@ -18,11 +18,11 @@ class TransferController extends Controller
         $validatedData = $request->validated();
 
         // Create a TransferService instance with validated data
-        $transferService = new TransferService(
-            $validatedData['source_card_number'],
-            $validatedData['dest_card_number'],
-            $validatedData['amount']
-        );
+        $transferService = app()->make(TransferService::class, [
+            'sourceCard' => $validatedData['source_card_number'],
+            'destCard' => $validatedData['dest_card_number'],
+            'amount' => $validatedData['amount']
+        ]);
 
         // Attempt to perform the transfer using the TransferService
         if (! $transferService->transfer()) {
